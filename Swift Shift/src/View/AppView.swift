@@ -33,14 +33,23 @@ struct AppView: View {
                 TabButton(tab: .settings, selectedTab: $selectedTab, iconName: "gear")
                 TabButton(tab: .info, selectedTab: $selectedTab, iconName: "info.circle")
             }
-            Button(action: {
-                let apps = WindowManager.getAllWindows()
-                SaveManager.save(apps: apps, category: "code")
-                let newApps = SaveManager.load(category: "code")
-                print(newApps)
-            }) {
-                Text("Get All Windows")
+            VStack {
+                Button(action: {
+                    let apps = WindowManager.getAllWindows()
+                    SaveManager.save(apps: apps, category: "code")
+                }) {
+                    Text("Save Windows")
+                }
+                Button(action: {
+                    let apps = SaveManager.load(category: "code")
+                    for app in apps {
+                        AppManager.openApp(app: app)
+                    }
+                }) {
+                    Text("Load Windows")
+                }
             }
+
             
             // Content area
             Group {
