@@ -13,6 +13,7 @@ struct WindowBounds {
 class WindowManager {
     // Function to move a specified window to a new location
     static func move(window: AXUIElement, to point: NSPoint) {
+        print(point)
         var mutablePoint = point
         let pointValue = AXValueCreate(AXValueType.cgPoint, &mutablePoint)!
         AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, pointValue)
@@ -43,11 +44,22 @@ class WindowManager {
         guard let windowsListInfo = CGWindowListCopyWindowInfo(options, CGWindowID(0)) as? [[String: Any]] else {
             return []
         }
-
+        
         let visibleWindows = windowsListInfo
             .filter { $0["kCGWindowLayer"] as? Int == 0 }
             .compactMap { WindowInfo(dict: $0) }
         return visibleWindows
+    }
+    
+    static func myMove(_ element: AXUIElement, to coordinates: CGPoint)
+    {
+        AXUIElementSetAttributeValue(element, kAXPositionAttribute as CFString, coordinates as CFTypeRef)
+    }
+    
+    static func createAXUIElement(for pid: pid_t) -> AXUIElement {
+        let AXUIElement = AXUIElementCreateApplication(pid)
+        print(AXUIElement)
+        return AXUIElement
     }
     
     
@@ -81,7 +93,7 @@ class WindowManager {
         }
         
         return nil
-        }
+    }
     
     private static func getAppURL(for bundleIdentifier: String) -> URL? {
         let apps = NSWorkspace.shared.runningApplications
@@ -237,7 +249,7 @@ class WindowManager {
         // drawCircleAt(x: topRight.x, y: topRight.y, diameter: 10, color: .blue)
         // drawCircleAt(x: bottomLeft.x, y: bottomLeft.y, diameter: 10, color: .blue)
         // drawCircleAt(x: bottomRight.x, y: bottomRight.y, diameter: 10, color: .blue)
-
+        
         return WindowBounds(topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
     }
 }

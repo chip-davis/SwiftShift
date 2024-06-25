@@ -30,7 +30,7 @@ class SaveManager {
                 apps = try decoder.decode([WindowInfo].self, from: data)
                 
             } catch {
-                print("Unable to Decode")
+                print("Unable to Decode \(error)")
             }
         }
         return apps

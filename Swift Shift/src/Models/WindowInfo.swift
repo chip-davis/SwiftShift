@@ -11,6 +11,7 @@ import CoreGraphics
 struct WindowInfo: Codable {
     var alpha: Float
     var bounds: CGRect
+    var coordinates: NSPoint
     var isOnscreen: Bool
     var layer: Int
     var memoryUsage: Int
@@ -42,6 +43,12 @@ struct WindowInfo: Codable {
             width: boundsDict["Width"] ?? 0,
             height: boundsDict["Height"] ?? 0
         )
+        guard let x = boundsDict["X"],
+              let y = boundsDict["Y"] else {
+            return nil
+        }
+        self.coordinates = NSPoint(x: x, y: y)
+        
         self.isOnscreen = isOnscreen == 1
         self.layer = layer
         self.memoryUsage = memoryUsage
