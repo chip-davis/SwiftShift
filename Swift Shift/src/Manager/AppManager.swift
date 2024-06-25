@@ -12,9 +12,20 @@ class AppManager {
     
     static func openApp(app: WindowInfo) {
         let workspace = NSWorkspace.shared
-            let configuration = NSWorkspace.OpenConfiguration()
+        let configuration = NSWorkspace.OpenConfiguration()
+        
+        // Get the running applications
+        let runningApps = workspace.runningApplications
+        
+        // Check if the application is already running
+        if let runningApp = runningApps.first(where: { $0.bundleURL == app.url }) {
+            var updatedApp = app
+            updatedApp.updateOwnerPID(newPID: Int(runningApp.processIdentifier))
+            print("\(runningApp.localizedName ?? "") is already running.")
             
-        workspace.openApplication(at: app.url, configuration: configuration) { (app, error) in
+        } else {
+            // If not running, open the application
+            workspace.openApplication(at: app.url, configuration: configuration) { (app, error) in
                 if let error = error {
                     print("Error opening application: \(error.localizedDescription)")
                 } else {
@@ -22,5 +33,8 @@ class AppManager {
                 }
             }
         }
+    }
+    
+
     
 }

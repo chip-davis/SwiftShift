@@ -50,6 +50,7 @@ class WindowManager {
         return visibleWindows
     }
     
+    
     private static func getBundleIdentifier(for pid: pid_t) -> String? {
         var pidInfo = kinfo_proc()
         var size = MemoryLayout.size(ofValue: pidInfo)

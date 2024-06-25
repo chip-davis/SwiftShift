@@ -20,7 +20,7 @@ struct WindowInfo: Codable {
     var sharingState: Int
     var storeType: Int
     var url: URL
-
+    
     init?(dict: [String: Any]) {
         guard let alpha = dict["kCGWindowAlpha"] as? Float,
               let boundsDict = dict["kCGWindowBounds"] as? [String: CGFloat],
@@ -34,7 +34,7 @@ struct WindowInfo: Codable {
               let storeType = dict["kCGWindowStoreType"] as? Int else {
             return nil
         }
-
+        
         self.alpha = alpha
         self.bounds = CGRect(
             x: boundsDict["X"] ?? 0,
@@ -52,9 +52,15 @@ struct WindowInfo: Codable {
         self.storeType = storeType
         if let pid = dict[kCGWindowOwnerPID as String] as? pid_t {
             self.url = WindowManager.getUrlForApp(with: pid) ?? URL(fileURLWithPath: "/")
-            } else {
-                self.url = URL(fileURLWithPath: "/")
-            }
+        } else {
+            self.url = URL(fileURLWithPath: "/")
+        }
+        
+        
+    }
+    mutating func updateOwnerPID(newPID: Int) {
+        self.ownerPID = newPID
+        self.url = WindowManager.getUrlForApp(with: pid_t(newPID)) ?? URL(fileURLWithPath: "/")
     }
 }
 
