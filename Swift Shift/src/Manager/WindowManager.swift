@@ -1,5 +1,7 @@
 import Cocoa
 import Accessibility
+import CoreGraphics
+import AppKit
 
 struct WindowBounds {
     let topLeft: NSPoint
@@ -35,6 +37,67 @@ class WindowManager {
         AXValueGetValue(sizeValue as! AXValue, AXValueType.cgSize, &windowSize)
         return NSSize(width: windowSize.width, height: windowSize.height)
     }
+    
+    static func getAllWindows() -> [WindowInfo] {
+        let options: CGWindowListOption = [.excludeDesktopElements, .optionOnScreenOnly]
+        guard let windowsListInfo = CGWindowListCopyWindowInfo(options, CGWindowID(0)) as? [[String: Any]] else {
+            return []
+        }
+
+        let visibleWindows = windowsListInfo
+            .filter { $0["kCGWindowLayer"] as? Int == 0 }
+            .compactMap { WindowInfo(dict: $0) }
+        return visibleWindows
+    }
+    
+    private static func getBundleIdentifier(for pid: pid_t) -> String? {
+        var pidInfo = kinfo_proc()
+        var size = MemoryLayout.size(ofValue: pidInfo)
+        var mib = [CTL_KERN, KERN_PROC, KERN_PROC_PID, pid]
+        
+        let result = mib.withUnsafeMutableBufferPointer {
+            sysctl($0.baseAddress, 4, &pidInfo, &size, nil, 0)
+        }
+        
+        guard result == 0 else {
+            return nil
+        }
+        
+        // Copy the process name to a local variable
+        let processNameBytes = withUnsafeBytes(of: pidInfo.kp_proc.p_comm) { bytes -> [CChar] in
+            let buffer = bytes.bindMemory(to: CChar.self)
+            return Array(buffer)
+        }
+        
+        // Create a String from the C string
+        guard String(validatingUTF8: processNameBytes) != nil else {
+            return nil
+        }
+        
+        let apps = NSWorkspace.shared.runningApplications
+        if let app = apps.first(where: { $0.processIdentifier == pid }) {
+            return app.bundleIdentifier
+        }
+        
+        return nil
+        }
+    
+    private static func getAppURL(for bundleIdentifier: String) -> URL? {
+        let apps = NSWorkspace.shared.runningApplications
+        if let app = apps.first(where: {$0.bundleIdentifier == bundleIdentifier}) {
+            return app.bundleURL
+        }
+        return nil
+    }
+    
+    static func getUrlForApp(with pid: pid_t) -> URL? {
+        if let bundleID = getBundleIdentifier(for: pid) {
+            return getAppURL(for: bundleID)
+        }
+        return nil
+    }
+    
+    
     
     // Function to get the window under the cursor (even if it's not focused)
     static func getCurrentWindow() -> AXUIElement? {
